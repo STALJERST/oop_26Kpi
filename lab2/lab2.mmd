@@ -1,0 +1,121 @@
+classDiagram
+    direction TD
+
+    class shape {
+        <<abstract>>
+        #long mx1
+        #long my1
+        #long mx2
+        #long my2
+        +shape()
+        +virtual ~shape()
+        +set(long x1, long y1, long x2, long y2) void
+        +show(HDC hdc)* void
+    }
+
+    class PointShape {
+        +PointShape()
+        +~PointShape() override
+        +show(HDC hdc) void
+    }
+
+    class LineShape {
+        +LineShape()
+        +~LineShape() override
+        +show(HDC hdc) void
+    }
+
+    class RectShape {
+        +RectShape()
+        +~RectShape() override
+        +show(HDC hdc) void
+    }
+
+    class EllipseShape {
+        +EllipseShape()
+        +~EllipseShape() override
+        +show(HDC hdc) void
+    }
+
+    shape <|-- PointShape : успадковує
+    shape <|-- LineShape : успадковує
+    shape <|-- RectShape : успадковує
+    shape <|-- EllipseShape : успадковує
+
+    class editor~T~ {
+        <<interface>>
+        +virtual ~editor()
+        +OnLBdown(HWND hwnd)* void
+        +OnLBup(HWND hwnd)* unique_ptr~T~
+        +OnMouseMove(HWND hwnd, LPARAM lp)* void
+        +OnPaint(HDC hdc)* void
+    }
+
+    class shapeEditor {
+        <<abstract>>
+        #POINT ptStart
+        #POINT ptCurrent
+        #bool isPainting
+        #drawRubber(HDC hdc, int x1, int y1, int x2, int y2) void
+        +virtual ~shapeEditor()
+    }
+
+    class pointEditor {
+        +OnLBdown(HWND hwnd) void
+        +OnLBup(HWND hwnd) unique_ptr~shape~
+        +OnMouseMove(HWND hwnd, LPARAM lp) void
+        +OnPaint(HDC hdc) void
+    }
+
+    class lineEditor {
+        -POINT ptPrev
+        -bool hasPrev
+        +OnLBdown(HWND hwnd) void
+        +OnLBup(HWND hwnd) unique_ptr~shape~
+        +OnMouseMove(HWND hwnd, LPARAM lp) void
+        +OnPaint(HDC hdc) void
+    }
+
+    class rectEditor {
+        -POINT ptPrev
+        -bool hasPrev
+        -drawRubberRect(HDC hdc, POINT a, POINT b) void
+        +OnLBdown(HWND hwnd) void
+        +OnLBup(HWND hwnd) unique_ptr~shape~
+        +OnMouseMove(HWND hwnd, LPARAM lp) void
+        +OnPaint(HDC hdc) void
+    }
+
+    class ellipseEditor {
+        -POINT ptPrev
+        -bool hasPrev
+        -drawRubberEllipse(HDC hdc, POINT center, POINT corner) void
+        +OnLBdown(HWND hwnd) void
+        +OnLBup(HWND hwnd) unique_ptr~shape~
+        +OnMouseMove(HWND hwnd, LPARAM lp) void
+        +OnPaint(HDC hdc) void
+    }
+
+    editor~shape~ <|-- shapeEditor : реалізує
+    shapeEditor <|-- pointEditor : успадковує
+    shapeEditor <|-- lineEditor : успадковує
+    shapeEditor <|-- rectEditor : успадковує
+    shapeEditor <|-- ellipseEditor : успадковує
+
+    class shapeObjEditor {
+        -int N = 118
+        -shape** pcshape
+        -int shapeCount
+        -unique_ptr~shapeEditor~ shEditor
+        +shapeObjEditor()
+        +~shapeObjEditor()
+        +setEditor(unique_ptr~shapeEditor~ newEditor) void
+        +OnLBdown(HWND hwnd) void
+        +OnLBup(HWND hwnd) void
+        +OnMouseMove(HWND hwnd, LPARAM lParam) void
+        +OnPaint(HDC hdc) void
+        +clear() void
+    }
+
+shapeObjEditor "1" o-- "0..118" shape : динамічний масив вказівників
+shapeObjEditor "1" o-- "0..1" shapeEditor : використовує поточний редактор

@@ -1,0 +1,148 @@
+classDiagram
+    direction TD
+
+    class shape {
+        <<abstract>>
+        #long mx1
+        #long my1
+        #long mx2
+        #long my2
+        +shape()
+        +virtual ~shape()
+        +set(long x1, long y1, long x2, long y2) void
+        +show(HDC hdc)* void
+    }
+
+    class PointShape {
+        +show(HDC hdc) void
+    }
+
+    class LineShape {
+        +show(HDC hdc) void
+    }
+
+    class RectShape {
+        +show(HDC hdc) void
+    }
+
+    class EllipseShape {
+        +show(HDC hdc) void
+    }
+
+    shape <|-- PointShape : успадковує
+    shape <|-- LineShape : успадковує
+    shape <|-- RectShape : успадковує
+    shape <|-- EllipseShape : успадковує
+
+    class editor~T~ {
+        <<interface>>
+        +virtual ~editor()
+        +OnLBdown(HWND hwnd)* void
+        +OnLBup(HWND hwnd)* unique_ptr~T~
+        +OnMouseMove(HWND hwnd, LPARAM lp)* void
+        +OnPaint(HDC hdc)* void
+    }
+
+    class shapeEditor {
+        <<abstract>>
+        #POINT ptStart
+        #POINT ptCurrent
+        #bool isPainting
+        #drawRubber(HDC hdc, int x1, int y1, int x2, int y2) void
+        #drawRubberRect(HDC hdc, int l, int t, int r, int b) void
+        #drawRubberEllipse(HDC hdc, int l, int t, int r, int b) void
+        +virtual ~shapeEditor()
+    }
+
+    class pointEditor {
+        +OnLBdown(HWND hwnd) void
+        +OnLBup(HWND hwnd) unique_ptr~shape~
+        +OnMouseMove(HWND hwnd, LPARAM lp) void
+        +OnPaint(HDC hdc) void
+    }
+
+    class lineEditor {
+        -POINT ptPrev
+        -bool hasPrev
+        +OnLBdown(HWND hwnd) void
+        +OnLBup(HWND hwnd) unique_ptr~shape~
+        +OnMouseMove(HWND hwnd, LPARAM lp) void
+        +OnPaint(HDC hdc) void
+    }
+
+    class rectEditor {
+        -POINT ptPrev
+        -bool hasPrev
+        -rubber(HDC hdc, POINT center, POINT corner) void
+        +OnLBdown(HWND hwnd) void
+        +OnLBup(HWND hwnd) unique_ptr~shape~
+        +OnMouseMove(HWND hwnd, LPARAM lp) void
+        +OnPaint(HDC hdc) void
+    }
+
+    class ellipseEditor {
+        -POINT ptPrev
+        -bool hasPrev
+        -rubber(HDC hdc, POINT p1, POINT p2) void
+        +OnLBdown(HWND hwnd) void
+        +OnLBup(HWND hwnd) unique_ptr~shape~
+        +OnMouseMove(HWND hwnd, LPARAM lp) void
+        +OnPaint(HDC hdc) void
+    }
+
+    editor~shape~ <|-- shapeEditor : реалізує
+    shapeEditor <|-- pointEditor : успадковує
+    shapeEditor <|-- lineEditor : успадковує
+    shapeEditor <|-- rectEditor : успадковує
+    shapeEditor <|-- ellipseEditor : успадковує
+
+    class shapeObjEditor {
+        -int N = 119
+        -shape* pcshape[119]
+        -int shapeCount
+        -unique_ptr~shapeEditor~ shEditor
+        +shapeObjEditor()
+        +~shapeObjEditor()
+        +setEditor(unique_ptr~shapeEditor~ newEditor) void
+        +hasEditor() bool
+        +OnLBdown(HWND hwnd) void
+        +OnLBup(HWND hwnd) void
+        +OnMouseMove(HWND hwnd, LPARAM lParam) void
+        +OnPaint(HDC hdc) void
+        +clear() void
+    }
+
+    class Toolbar {
+        -HWND hwndToolbar
+        -HIMAGELIST hImageList
+        -addIcon(HDC hdcMem, HBITMAP hbm, COLORREF color, int type) void
+        -createImages(HWND hwndParent) void
+        +create(HWND hwndParent) HWND
+        +checkButton(int cmdId) void
+        +onResize() void
+        +getHwnd() HWND
+    }
+
+    class MainWindow {
+        -HWND m_hwnd
+        -shapeObjEditor m_shapeManager
+        -Toolbar m_toolbar
+        -int m_currentType
+        -updateTitle() void
+        -selectShapeType(int type) void
+        +OnCreate(HWND hwnd) LRESULT
+        +OnCommand(HWND hwnd, WPARAM wParam, LPARAM lParam) LRESULT
+        +OnNotify(HWND hwnd, WPARAM wParam, LPARAM lParam) LRESULT
+        +OnLButtonDown(HWND hwnd) LRESULT
+        +OnMouseMove(HWND hwnd, LPARAM lParam) LRESULT
+        +OnLButtonUp(HWND hwnd) LRESULT
+        +OnPaint(HWND hwnd) LRESULT
+        +OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam) LRESULT
+        +OnDestroy(HWND hwnd) LRESULT
+        +getHwnd() HWND
+    }
+
+    MainWindow "1" *-- "1" shapeObjEditor : композиція
+    MainWindow "1" *-- "1" Toolbar : композиція
+shapeObjEditor "1" o-- "0..119" shape : статичний масив вказівників
+shapeObjEditor "1" o-- "0..1" shapeEditor : використовує поточний редактор

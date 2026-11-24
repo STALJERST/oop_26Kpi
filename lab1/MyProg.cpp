@@ -51,7 +51,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    const wchar_t CLASS_NAME[] = L"Lab2MainWindow";
+    const wchar_t CLASS_NAME[] = L"Lab1MainWindow";
 
     WNDCLASSW wc = {};
     wc.lpfnWndProc = WindowProc;
