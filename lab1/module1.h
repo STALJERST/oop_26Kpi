@@ -4,48 +4,40 @@
 #include <windows.h>
 #include "utils.h"
 
-#define ID_BTN_YES 1001
-#define ID_EDIT_TEXT 1002
+#define ID_MOD1_BTN_YES 1001
+#define ID_MOD1_EDIT    1002
 
-static INT_PTR CALLBACK DialogWndProc1(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK DialogWndProc1(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
-        case WM_INITDIALOG: {
-            HINSTANCE hInst = (HINSTANCE)GetWindowLongPtrW(hWnd, GWLP_HINSTANCE);
-
-            CreateWindowW(L"EDIT", L"", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-                          20, 20, 260, 25, hWnd, (HMENU)ID_EDIT_TEXT, hInst, NULL);
-
-            CreateWindowW(L"BUTTON", L"Так", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          50, 60, 80, 30, hWnd, (HMENU)ID_BTN_YES, hInst, NULL);
-
-            CreateWindowW(L"BUTTON", L"Відміна", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          170, 60, 80, 30, hWnd, (HMENU)IDCANCEL, hInst, NULL);
-            return (INT_PTR)TRUE;
+        case WM_CREATE: {
+            HWND hEdit = AddEdit(hWnd, ID_MOD1_EDIT, 20, 20, 260, 25);
+            AddButton(hWnd, ID_MOD1_BTN_YES, L"Так",     50,  60, 80, 30);
+            AddButton(hWnd, IDCANCEL,        L"Відміна", 170, 60, 80, 30);
+            SetFocus(hEdit);
+            return 0;
         }
         case WM_COMMAND: {
             WORD btnId = LOWORD(wParam);
-            if (btnId == ID_BTN_YES) {
-                wchar_t buffer[256];
-                GetDlgItemTextW(hWnd, ID_EDIT_TEXT, buffer, 256);
+            if (btnId == ID_MOD1_BTN_YES) {
+                std::wstring text = GetItemText(hWnd, ID_MOD1_EDIT);
 
-                // Передаємо текст головному вікну через користувацьке повідомлення (наприклад, WM_USER + 10)
                 HWND hParent = GetParent(hWnd);
-                MessageBoxW(hParent, buffer, L"Введений текст", MB_OK); // Або SendMessage
+                MessageBoxW(hParent, text.c_str(), L"Введений текст", MB_OK);
 
                 DestroyWindow(hWnd);
-                return (INT_PTR)TRUE;
+                return 0;
             } else if (btnId == IDCANCEL) {
                 DestroyWindow(hWnd);
-                return (INT_PTR)TRUE;
+                return 0;
             }
             break;
         }
     }
-    return (INT_PTR)FALSE;
+    return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
-void StartModule1(HINSTANCE hInstance, HWND hParent) {
-    HWND hDlg = CreateInMemoryDialog(hInstance, hParent, DialogWndProc1, 0, L"Робота 1 - Ввід");
+inline void StartModule1(HINSTANCE hInstance, HWND hParent) {
+    HWND hDlg = CreateSimpleDialog(hInstance, hParent, DialogWndProc1, L"Робота 1 - Ввід", 300, 110);
     PositionDialogAtBase(NULL, hDlg);
 }
 #endif // OOP_26KPI_MODULE1_H
